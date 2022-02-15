@@ -112,9 +112,13 @@ export default class AdvancedBlanks extends (H5P.Question as { new(): any; }) {
         this.state = States.checking;
       this.showFeedback();
 
+      // Send screenshot to server
       setTimeout(() => {
         if (H5P && H5P.KLScreenshot) {
-          H5P.KLScreenshot.takeScreenshot();
+          H5P.KLScreenshot.takeScreenshot(
+            this,
+            this.getH5pContainer().get(0)
+          );
         }
       }, 250); // Allow buttons to update
 
