@@ -120,7 +120,7 @@ export default class AdvancedBlanks extends (H5P.Question as { new(): any; }) {
             this.getH5pContainer().get(0)
           );
         }
-      }, 250); // Allow buttons to update
+      }, 500); // Allow buttons to update
 
     }
     else {
