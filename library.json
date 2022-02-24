@@ -2,7 +2,7 @@
   "title": "Advanced fill the blanks",
   "description": "Fill the blanks exercise with individual feedback",
   "majorVersion": 1,
-  "minorVersion": 1,
+  "minorVersion": 2,
   "patchVersion": 0,
   "runnable": 1,
   "author": "S. Rettig",
@@ -30,14 +30,19 @@
       "minorVersion": 5
     },
     {
+      "machineName": "FontKidsLoop",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
+    {
       "machineName": "H5P.Question",
       "majorVersion": 1,
-      "minorVersion": 4
+      "minorVersion": 5
     },
     {
       "machineName": "H5P.JoubelUI",
       "majorVersion": 1,
-      "minorVersion": 3
+      "minorVersion": 4
     }
   ],
   "editorDependencies": [
