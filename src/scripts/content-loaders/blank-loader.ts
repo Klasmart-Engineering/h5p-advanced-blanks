@@ -30,8 +30,8 @@ export class BlankLoader {
     return elem.value;
   }
 
-  public createBlank(id: string, correctText: string, hintText: string, incorrectAnswers: any[]): Blank {
-    var blank = new Blank(this.settings, this.localization, this.jquery, this.messageService, id)
+  public createBlank(id: string, correctText: string, hintText: string, incorrectAnswers: any[], placeholders: number): Blank {
+    var blank = new Blank(this.settings, this.localization, this.jquery, this.messageService, id, placeholders)
     if (correctText) {
       correctText = this.decodeHtml(correctText);
       blank.addCorrectAnswer(new Answer(correctText, "", false, 0, this.settings));
@@ -58,7 +58,7 @@ export class BlankLoader {
       return "";
 
     if(!snippets)
-      return text;    
+      return text;
 
     for (var snippet of snippets) {
       if (snippet.name === undefined || snippet.name === "" || snippet.text === undefined || snippet.text === "")

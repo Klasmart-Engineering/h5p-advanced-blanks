@@ -33,7 +33,7 @@
     font-size: 1em;
     border-radius: 0.25em;
     border: 1px solid #a0a0a0;
-    padding: 0.1875em 1.5em 0.1875em 0.5em;
+    padding: 0.1875em 0.5em 0.1875em 0.5em;
     text-overflow: ellipsis;
     overflow: hidden;
 }
@@ -279,6 +279,12 @@ select.h5p-text-input {
 .h5p-advanced-blanks .h5p-advanced-blanks-type-mode .blank.retry.has-pending-feedback .h5p-input-wrapper:before {
     color: #ffff00;
     text-shadow: 0px 0px 0.5em black;
+}
+
+.h5p-advanced-blanks .h5p-advanced-blanks-tmp-field {
+  position: absolute;
+  white-space: nowrap;
+  width: initial;
 }
 
 @keyframes shake {

@@ -15,6 +15,7 @@ export interface ISettings {
   confirmCheckDialog: boolean;
   confirmRetryDialog: boolean;
   disableImageZooming: boolean;
+  contentId: number | string;
 }
 
 export class H5PSettings implements ISettings {
@@ -32,6 +33,7 @@ export class H5PSettings implements ISettings {
   public confirmCheckDialog: boolean = false;
   public confirmRetryDialog: boolean = false;
   public disableImageZooming: boolean = false;
+  public contentId: string = '';
 
   constructor(h5pConfigData: any) {
     if (h5pConfigData.behaviour.mode === 'selection') {
@@ -62,6 +64,7 @@ export class H5PSettings implements ISettings {
     this.confirmCheckDialog = h5pConfigData.behaviour.confirmCheckDialog;
     this.confirmRetryDialog = h5pConfigData.behaviour.confirmRetryDialog;
     this.disableImageZooming = h5pConfigData.media.disableImageZooming;
+    this.contentId = h5pConfigData.contentId;
 
     this.enforceLogic();
   }

@@ -19,7 +19,7 @@ export interface IDataRepository {
  */
 export class H5PDataRepository implements IDataRepository {
   constructor(private h5pConfigData: any, private settings: ISettings,
-    private localization: H5PLocalization, private jquery: JQueryStatic, 
+    private localization: H5PLocalization, private jquery: JQueryStatic,
     private unwrapper: Unrwapper) {
 
   }
@@ -50,6 +50,13 @@ export class H5PDataRepository implements IDataRepository {
     if (!this.h5pConfigData.content.blanksList)
       return blanks;
 
+    const blanksPlaceholders = this.h5pConfigData.content.blanksText
+      .match(/(_{3,})/g)
+      .map(underscores => underscores.length);
+    while(blanksPlaceholders.length < this.h5pConfigData.content.blanksList.length) {
+      blanksPlaceholders.push(3); // Fill up
+    }
+
     for (var i = 0; i < this.h5pConfigData.content.blanksList.length; i++) {
       var h5pBlank = this.h5pConfigData.content.blanksList[i];
 
@@ -57,8 +64,8 @@ export class H5PDataRepository implements IDataRepository {
       if (correctText === "" || correctText === undefined)
         continue;
 
-      var blank = BlankLoader.instance.createBlank("cloze" + i, correctText,
-        h5pBlank.hint, h5pBlank.incorrectAnswersList);
+      var blank = BlankLoader.instance.createBlank(`advancedblanks-${this.settings.contentId}-cloze-${i}`, correctText,
+        h5pBlank.hint, h5pBlank.incorrectAnswersList, blanksPlaceholders[i]);
 
       blank.finishInitialization();
       blanks.push(blank);

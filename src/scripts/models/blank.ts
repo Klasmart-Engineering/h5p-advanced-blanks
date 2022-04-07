@@ -8,6 +8,11 @@ import { ISettings } from "../services/settings";
 import { getLongestString, shuffleArray } from "../../lib/helpers";
 import * as jsdiff from 'diff';
 
+interface CharInfo {
+  char: string | null,
+  width: number
+}
+
 export class Blank extends ClozeElement {
   // content
   correctAnswers: Answer[];
@@ -16,6 +21,10 @@ export class Blank extends ClozeElement {
   id: string;
   choices: string[];
   hasHint: boolean;
+  style: any;
+  updateWidthTimeout: number;
+  widestChar: CharInfo;
+  inputDOM: HTMLElement
 
   // viewmodel stuff
 
@@ -38,7 +47,7 @@ export class Blank extends ClozeElement {
    * @param  {string} correctText?
    * @param  {string} hintText?
    */
-  constructor(private settings: ISettings, private localization: H5PLocalization, private jquery: JQueryStatic, private messageService: MessageService, id: string) {
+  constructor(private settings: ISettings, private localization: H5PLocalization, private jquery: JQueryStatic, private messageService: MessageService, id: string, private placeholders: number) {
     super();
 
     this.enteredText = "";
@@ -58,6 +67,7 @@ export class Blank extends ClozeElement {
       this.loadChoicesFromOwnAlternatives();
     }
     this.calculateMinTextLength();
+    this.updateWidth();
   }
 
   public addCorrectAnswer(answer: Answer) {
@@ -266,7 +276,7 @@ export class Blank extends ClozeElement {
   }
 
   /**
-   * Checks if the entered text is the correct answer or one of the 
+   * Checks if the entered text is the correct answer or one of the
    * incorrect ones and gives the user feedback accordingly.
    */
   public evaluateAttempt(surpressTooltips: boolean, forceCheck?: boolean) {
@@ -327,6 +337,7 @@ export class Blank extends ClozeElement {
     this.setAnswerState(MessageType.None);
     this.lastCheckedText = "";
     this.removeTooltip();
+    this.updateWidth();
   }
 
   public lostFocus(): void {
@@ -335,9 +346,82 @@ export class Blank extends ClozeElement {
     }
   }
 
+  private updateWidth(): void {
+    if (this.settings.clozeType === ClozeType.Select) {
+      return; // Only relevant for input fields
+    }
+
+    clearTimeout(this.updateWidthTimeout);
+    this.updateWidthTimeout = setTimeout(() => {
+      this.inputDOM = this.inputDOM || document.querySelector(`#${this.id}`);
+      if (!this.inputDOM) {
+        return;
+      }
+
+      this.widestChar = this.widestChar || this.computeWidestChar();
+      const width = Math.max(this.placeholders * this.widestChar.width, this.computeFieldWidth());
+
+      this.inputDOM.style.width = `${width}px`;
+    }, 0);
+  }
+
+  /**
+   * Compute width of input field (for given text).
+   * @param {string} [text=''] Text to set for field.
+   * @return {number} Computed width.
+   */
+  computeFieldWidth(text = ''): number {
+    this.inputDOM = this.inputDOM || document.querySelector(`#${this.id}`);
+    if (!this.inputDOM) {
+      return;
+    }
+
+    const tmp = document.createElement('div');
+    tmp.innerText = text || this.enteredText;
+    tmp.classList.add('h5p-advanced-blanks-tmp-field');
+
+    this.style = this.style || getComputedStyle(this.inputDOM);
+
+    tmp.style.fontSize = this.style.getPropertyValue('font-size');
+    tmp.style.fontFamily = this.style.getPropertyValue('font-family');
+    tmp.style.padding = this.style.getPropertyValue('padding');
+
+    this.inputDOM.parentNode.appendChild(tmp);
+    const width = tmp.getBoundingClientRect().width -
+      parseInt(this.style.getPropertyValue('padding-left')) -
+      parseInt(this.style.getPropertyValue('padding-right'));
+    tmp.parentNode.removeChild(tmp);
+
+    return width;
+  }
+
+  /**
+   * Compute widest char.
+   * @return {object} Result with char and width.
+   */
+  private computeWidestChar = function () {
+    const allChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let result = {
+      char: null,
+      width: 0
+    };
+    for (let i = 0; i < allChars.length; i++) {
+      const char = allChars.substr(i, 1);
+      const width = this.computeFieldWidth(char);
+      if (width > result.width) {
+        result = {
+          char: char,
+          width: width
+        }
+      }
+    }
+
+    return result;
+  }
+
   /**
    * Sets the boolean properties isCorrect, is Error and isRetry according to thepassed  messageType.
-   * @param messageType 
+   * @param messageType
    */
   private setAnswerState(messageType: MessageType) {
     this.isCorrect = false;
