@@ -20,7 +20,7 @@ const XAPI_ALTERNATIVE_EXTENSION = 'https://h5p.org/x-api/alternatives';
 const XAPI_CASE_SENSITIVITY = 'https://h5p.org/x-api/case-sensitivity';
 const XAPI_REPORTING_VERSION_EXTENSION = 'https://h5p.org/x-api/h5p-reporting-version';
 
-export default class AdvancedBlanks extends (H5P.Question as { new(): any; }) {
+export default class AdvancedBlanks extends (H5P.Question as { new(string): any; }) {
 
   private clozeController: ClozeController;
   private repository: IDataRepository;
@@ -47,7 +47,7 @@ export default class AdvancedBlanks extends (H5P.Question as { new(): any; }) {
    * @param {object} contentData
    */
   constructor(config: any, contentId: string, contentData: any = {}) {
-    super();
+    super('advanced-blanks');
 
     // Set mandatory default values for editor widgets that create content type instances
     config = extend({
@@ -79,28 +79,9 @@ export default class AdvancedBlanks extends (H5P.Question as { new(): any; }) {
     this.clozeController.onAutoChecked = this.onAutoChecked;
     this.clozeController.onTyped = this.onTyped;
 
-    if (contentData && contentData.previousState)
-      this.previousState = contentData.previousState;
-
-    /**
-    * Overrides the attach method of the superclass (H5P.Question) and calls it
-    * at the same time. (equivalent to super.attach($container)).
-    * This is necessary, as Ractive needs to be initialized with an existing DOM
-    * element. DOM elements are created in H5P.Question.attach, so initializing
-    * Ractive in registerDomElements doesn't work.
-    */
-    this.attach = ((original) => {
-      return ($container) => {
-        original($container);
-        this.clozeController.initialize(this.container.get(0), $container);
-        if (this.clozeController.deserializeCloze(this.previousState)) {
-          this.answered = this.clozeController.isFilledOut;
-          if (this.settings.autoCheck)
-            this.onCheckAnswer();
-          this.toggleButtonVisibility(this.state);
-        }
-      }
-    })(this.attach);
+    this.previousState = (contentData && contentData.previousState) ?
+       contentData.previousState :
+       {};
   }
 
   /**
@@ -162,6 +143,47 @@ export default class AdvancedBlanks extends (H5P.Question as { new(): any; }) {
     this.registerButtons();
 
     this.moveToState(States.ongoing);
+
+    /*
+     * When Ractive is initialized, it requires the DOM to have been rendered.
+     * H5P.Question doesn't offer a callback or event to detect when that has
+     * happened, so we use its resize call as a trigger and check for the DOM.
+     */
+    this.on('resize', this.checkDOMPresent);
+  }
+
+  /**
+   * Initialize clozeController/Ractive once DOM is present.
+   */
+  private checkDOMPresent(): void {
+    if (this.initialized || !document.querySelector('.h5p-question-content')) {
+      return; // Required DOM element is not present yet
+    }
+
+    // Remove this handler, just needed once
+    this.off('resize', this.checkDOMPresent);
+
+    // Determine original $container for this content
+    const $container = this.jQuery(this.container).closest('.h5p-question');
+
+    // Initialize clozeController with Ractive
+    this.clozeController.initialize(this.container.get(0), $container);
+
+    if (this.clozeController.deserializeCloze(this.previousState.cloze)) {
+      this.state = this.previousState.state || States.ongoing;
+
+      if (this.state === States.checking || this.state === States.finished) {
+        this.onCheckAnswer();
+      }
+      else if (this.state === States.showingSolutions){
+        this.onShowSolution(true);
+      }
+
+      this.answered = this.clozeController.isFilledOut;
+      this.toggleButtonVisibility(this.state);
+    }
+
+    this.initialized = true;
   }
 
   /**
@@ -215,7 +237,9 @@ export default class AdvancedBlanks extends (H5P.Question as { new(): any; }) {
     if (!this.settings.autoCheck) {
       // Check answer button
       this.addButton('check-answer', this.localization.getTextFromLabel(LocalizationLabels.checkAllButton),
-        this.onCheckAnswer, true, {}, {
+        () => {
+          this.onCheckAnswer({answered: true});
+        }, true, {}, {
         confirmationDialog: {
           enable: this.settings.confirmCheckDialog,
           l10n: this.localization.getObjectForStructure(LocalizationStructures.confirmCheck),
@@ -243,11 +267,17 @@ export default class AdvancedBlanks extends (H5P.Question as { new(): any; }) {
     }
   }
 
-  private onCheckAnswer = () => {
+  /**
+   * Check answer. Also updates states
+   * @param {object} [params={}] Parameters.
+   * @param {boolean} [params.skipXAPI] If true, will skip xAPI.
+   */
+  private onCheckAnswer = (params: any = {}) => {
     this.clozeController.checkAll();
 
-    this.triggerXAPI('interacted');
-    this.triggerXAPIAnswered();
+    if (!params.skipXAPI) {
+      this.triggerXAPIAnswered();
+    }
 
     this.transitionState();
     if (this.state !== States.finished)
@@ -264,7 +294,15 @@ export default class AdvancedBlanks extends (H5P.Question as { new(): any; }) {
     }
   }
 
-  private onShowSolution = () => {
+  private onShowSolution = (force: boolean) => {
+    if (!force && this.settings.showSolutionsRequiresInput && !this.clozeController.allBlanksEntered) {
+      // Require answer before solution can be viewed
+      this.updateFeedbackContent(this.localization.getTextFromLabel(LocalizationLabels.notFilledOutWarning));
+      this.read(this.localization.getTextFromLabel(LocalizationLabels.notFilledOutWarning));
+
+      return;
+    }
+
     this.moveToState(States.showingSolutions);
     this.clozeController.showSolutions();
     this.showFeedback();
@@ -328,8 +366,13 @@ export default class AdvancedBlanks extends (H5P.Question as { new(): any; }) {
     this.trigger('resize');
   }
 
-  public getCurrentState = (): string[] => {
-    return this.clozeController.serializeCloze();
+  public getCurrentState = () => {
+    const state = {
+      cloze: this.clozeController.serializeCloze(),
+      state: this.state
+    };
+
+    return state;
   };
 
   /****************************************
@@ -348,7 +391,7 @@ export default class AdvancedBlanks extends (H5P.Question as { new(): any; }) {
   }
 
   public showSolutions = () => {
-    this.onShowSolution();
+    this.onShowSolution(true);
     this.moveToState(States.showingSolutionsEmbedded);
   }
 
@@ -452,7 +495,7 @@ export default class AdvancedBlanks extends (H5P.Question as { new(): any; }) {
    * @return {string} User answers separated by the "[,]" pattern
    */
   public getxAPIResponse = (): string => {
-    var usersAnswers = this.getCurrentState();
+    var usersAnswers = (this.getCurrentState()).cloze;
     return usersAnswers.join('[,]');
   };
 }

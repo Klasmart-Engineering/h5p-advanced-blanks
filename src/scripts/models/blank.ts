@@ -471,7 +471,7 @@ export class Blank extends ClozeElement {
   }
 
   public serialize() {
-    return this.enteredText;
+    return this.lastCheckedText || this.enteredText;
   }
 
   public deserialize(data: any) {
