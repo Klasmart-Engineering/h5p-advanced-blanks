@@ -78,6 +78,7 @@ export default class AdvancedBlanks extends (H5P.Question as { new(string): any;
     this.clozeController.onSolved = this.onSolved;
     this.clozeController.onAutoChecked = this.onAutoChecked;
     this.clozeController.onTyped = this.onTyped;
+    this.clozeController.onClozeRefreshed = this.onClozeRefreshed;
 
     this.previousState = (contentData && contentData.previousState) ?
        contentData.previousState :
@@ -123,6 +124,10 @@ export default class AdvancedBlanks extends (H5P.Question as { new(string): any;
     }
     this.triggerXAPI('interacted');
     this.answered = true;
+  }
+
+  private onClozeRefreshed = () => {
+    this.trigger('kllStoreSessionState', undefined, { bubbles: true, external: true });
   }
 
   private onAutoChecked = () => {
@@ -328,6 +333,8 @@ export default class AdvancedBlanks extends (H5P.Question as { new(string): any;
   private moveToState(state: States) {
     this.state = state;
     this.toggleButtonVisibility(state);
+
+    this.trigger('kllStoreSessionState', undefined, { bubbles: true, external: true });
   }
 
   private toggleButtonVisibility(state: States) {

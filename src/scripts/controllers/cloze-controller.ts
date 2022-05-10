@@ -28,6 +28,10 @@ interface Typed {
   (): void;
 }
 
+interface ClozeRefreshed {
+  (): void;
+}
+
 export class ClozeController {
   private jquery: JQuery;
 
@@ -38,6 +42,7 @@ export class ClozeController {
   public onAutoChecked: AutoChecked;
   public onSolved: Solved;
   public onTyped: Typed;
+  public onClozeRefreshed: ClozeRefreshed;
 
   // Storage of the ractive objects that link models and views
   private highlightRactives: { [id: string]: Ractive.Ractive } = {};
@@ -165,6 +170,7 @@ export class ClozeController {
 
   checkBlank = (blank: Blank, cause: string) => {
     if ((cause === 'blur' || cause === 'change')) {
+      console.log(this);
       blank.lostFocus();
     }
 
@@ -282,6 +288,8 @@ export class ClozeController {
       var blankRactive = this.blankRactives[blank.id];
       blankRactive.set("blank", blank);
     }
+
+    this.onClozeRefreshed();
   }
 
   private checkAndNotifyCompleteness = (): boolean => {
