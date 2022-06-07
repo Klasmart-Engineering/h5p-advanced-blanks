@@ -131,7 +131,7 @@ export default class AdvancedBlanks extends (H5P.Question as { new(string): any;
   private onAutoChecked = () => {
     this.triggerXAPI('interacted');
 
-    if (this.clozeController.isFullyFilledOut {
+    if (this.clozeController.isFullyFilledOut) {
       this.triggerXAPIAnswered();
     }
   }
