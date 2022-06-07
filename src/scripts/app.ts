@@ -106,9 +106,7 @@ export default class AdvancedBlanks extends (H5P.Question as { new(string): any;
       }, 500); // Allow buttons to update
 
     }
-    else {
-      this.setFeedback("", score, maxScore);
-    }
+
     this.transitionState();
     this.toggleButtonVisibility(this.state);
   }
@@ -132,7 +130,10 @@ export default class AdvancedBlanks extends (H5P.Question as { new(string): any;
 
   private onAutoChecked = () => {
     this.triggerXAPI('interacted');
-    this.triggerXAPIAnswered();
+
+    if (this.clozeController.isFullyFilledOut {
+      this.triggerXAPIAnswered();
+    }
   }
 
   /**
