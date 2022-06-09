@@ -50,8 +50,8 @@ export class H5PDataRepository implements IDataRepository {
     if (!this.h5pConfigData.content.blanksList)
       return blanks;
 
-    const blanksPlaceholders = this.h5pConfigData.content.blanksText
-      .match(/(_{3,})/g)
+    let blanksPlaceholders = this.h5pConfigData.content.blanksText.match(/(_{3,})/g);
+    blanksPlaceholders = (blanksPlaceholders || [])
       .map(underscores => underscores.length);
     while(blanksPlaceholders.length < this.h5pConfigData.content.blanksList.length) {
       blanksPlaceholders.push(3); // Fill up
