@@ -8,6 +8,7 @@ export interface ISettings {
   enableSolutionsButton: boolean;
   enableCheckButton: boolean;
   autoCheck: boolean;
+  useDynamicBlankSize: boolean;
   caseSensitive: boolean;
   warnSpellingErrors: boolean;
   acceptSpellingErrors: boolean;
@@ -26,6 +27,7 @@ export class H5PSettings implements ISettings {
   public enableSolutionsButton: boolean = true;
   public enableCheckButton: boolean = true;
   public autoCheck: boolean = false;
+  public useDynamicBlankSize: boolean = false;
   public caseSensitive: boolean = false;
   public warnSpellingErrors: boolean = true;
   public acceptSpellingErrors: boolean = false;
@@ -57,6 +59,7 @@ export class H5PSettings implements ISettings {
     this.enableSolutionsButton = h5pConfigData.behaviour.enableSolutionsButton;
     this.enableCheckButton = h5pConfigData.behaviour.enableCheckButton;
     this.autoCheck = h5pConfigData.behaviour.autoCheck;
+    this.useDynamicBlankSize = h5pConfigData.behaviour.useDynamicBlankSize;
     this.caseSensitive = h5pConfigData.behaviour.caseSensitive;
     this.warnSpellingErrors = h5pConfigData.behaviour.spellingErrorBehaviour === "warn";
     this.acceptSpellingErrors = h5pConfigData.behaviour.spellingErrorBehaviour === "accept";
@@ -83,6 +86,7 @@ export class H5PSettings implements ISettings {
       this.warnSpellingErrors = false;
       this.acceptSpellingErrors = false;
       this.caseSensitive = false;
+      this.useDynamicBlankSize = false;
     }
   }
 }

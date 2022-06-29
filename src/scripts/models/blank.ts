@@ -24,6 +24,7 @@ export class Blank extends ClozeElement {
   style: any;
   updateWidthTimeout: number;
   widestChar: CharInfo;
+  longestAlternativewidth: number;
   inputDOM: HTMLElement
 
   // viewmodel stuff
@@ -67,7 +68,10 @@ export class Blank extends ClozeElement {
       this.loadChoicesFromOwnAlternatives();
     }
     this.calculateMinTextLength();
-    this.updateWidth();
+
+    if (this.settings.useDynamicBlankSize) {
+      this.updateWidth();
+    }
   }
 
   public addCorrectAnswer(answer: Answer) {
@@ -337,7 +341,10 @@ export class Blank extends ClozeElement {
     this.setAnswerState(MessageType.None);
     this.lastCheckedText = "";
     this.removeTooltip();
-    this.updateWidth();
+
+    if (this.settings.useDynamicBlankSize) {
+      this.updateWidth();
+    }
   }
 
   public lostFocus(): void {
@@ -358,8 +365,22 @@ export class Blank extends ClozeElement {
         return;
       }
 
+      const longestAlternativewidth = this.longestAlternativewidth ||
+        this.correctAnswers
+          .reduce((answers, current) => {
+            // Flatten alternatives
+            return [...answers, ...current.alternatives];
+          }, [])
+          .reduce((result, current) => {
+            // Choose longest alternative
+            return (current.length > result) ? current.length : result;
+          }, 3); // 3 chars should be minimum
+
       this.widestChar = this.widestChar || this.computeWidestChar();
-      const width = Math.max(this.placeholders * this.widestChar.width, this.computeFieldWidth());
+      const width = Math.max(
+        longestAlternativewidth * this.widestChar.width,
+        this.computeFieldWidth()
+      );
 
       this.inputDOM.style.width = `${width}px`;
     }, 0);

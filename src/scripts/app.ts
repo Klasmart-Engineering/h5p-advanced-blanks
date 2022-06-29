@@ -56,7 +56,8 @@ export default class AdvancedBlanks extends (H5P.Question as { new(string): any;
       },
       behaviour: {
         mode: 'typing',
-        selectAlternatives: 'alternatives'
+        selectAlternatives: 'alternatives',
+        useDynamicBlankSize: false
       },
       contentId: contentId
     }, config);
