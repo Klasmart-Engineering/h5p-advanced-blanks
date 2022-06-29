@@ -170,7 +170,6 @@ export class ClozeController {
 
   checkBlank = (blank: Blank, cause: string) => {
     if ((cause === 'blur' || cause === 'change')) {
-      console.log(this);
       blank.lostFocus();
     }
 
